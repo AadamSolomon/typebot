@@ -2,6 +2,7 @@ import { exec } from "node:child_process";
 import { join, relative } from "node:path";
 
 const prismaPackagePath = join(__dirname, "..");
+const prismaBin = join(prismaPackagePath, "../../node_modules/.bin/prisma");
 
 const postgresqlSchemaPath = relative(
   prismaPackagePath,
@@ -37,7 +38,7 @@ export const executePrismaCommand = (command: string, options?: Options) => {
   if (databaseUrl?.startsWith("mysql://")) {
     console.log("Executing for MySQL schema");
     return executeCommand(
-      `${command} --config ${prismaConfigPath}${
+      `bun ${prismaBin} ${command.replace(/^prisma /, "")} --config ${prismaConfigPath}${
         includeSchema ? ` --schema ${mysqlSchemaPath}` : ""
       }`,
     );
@@ -49,7 +50,7 @@ export const executePrismaCommand = (command: string, options?: Options) => {
   ) {
     console.log("Executing for PostgreSQL schema");
     return executeCommand(
-      `${command} --config ${prismaConfigPath}${
+      `bun ${prismaBin} ${command.replace(/^prisma /, "")} --config ${prismaConfigPath}${
         includeSchema ? ` --schema ${postgresqlSchemaPath}` : ""
       }`,
     );

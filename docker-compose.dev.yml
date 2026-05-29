@@ -55,6 +55,12 @@ services:
       - "4317:4317"
       - "4318:4318"
     restart: unless-stopped
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    restart: unless-stopped
 volumes:
   db_data:
   s3_data:

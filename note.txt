@@ -1,0 +1,18 @@
+  1. Install dependencies
+  bun install
+
+  2. Start the infrastructure (Postgres, MinIO/S3, Redis)
+  docker compose -f docker-compose.dev.yml up -d
+
+  3. Set up environment variables
+  cp .env.dev.example .env
+
+  4. Run database migrations
+  bunx nx db:migrate prisma
+
+  5. Start the dev servers
+  bun dev
+
+  This starts:
+  - Builder (flow editor) → http://localhost:3000
+  - Viewer (bot runtime) → http://localhost:3001
