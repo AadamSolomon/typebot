@@ -99,6 +99,10 @@ export const startSession = async ({
   const typebot = await getTypebot(startParams);
   Sentry.setUser({ id: typebot.id });
 
+  const workspaceSecretVariables = await getWorkspaceSecretVariables(
+    typebot.workspaceId,
+  );
+
   const result = await getOrInitResult({
     resultId: startParams.type === "live" ? startParams.resultId : undefined,
     typebotId: typebot.id,
@@ -110,12 +114,15 @@ export const startSession = async ({
         : defaultSettings.general.rememberUser.isEnabled),
   });
 
-  const startVariables = result
-    ? injectVariableValues({
-        variables: typebot.variables,
-        variablesWithValue: result.variables,
-      })
-    : typebot.variables;
+  const startVariables = [
+    ...workspaceSecretVariables,
+    ...(result
+      ? injectVariableValues({
+          variables: typebot.variables,
+          variablesWithValue: result.variables,
+        })
+      : typebot.variables),
+  ];
 
   const typebotInSession = convertStartTypebotToTypebotInSession(
     typebot,
@@ -650,4 +657,32 @@ const getStartingPointFirstBlockId = (
   const nextGroup = typebot.groups.find(byId(nextEdge.to.groupId));
   if (!nextGroup) throw new Error("Next group not found");
   return nextGroup.blocks.at(0)?.id;
+};
+
+const getWorkspaceSecretVariables = async (
+  workspaceId: string,
+): Promise<Variable[]> => {
+  const { decrypt } = await import("@typebot.io/credentials/decrypt");
+  const { createId } = await import("@paralleldrive/cuid2");
+  const secrets = await prisma.credentials.findMany({
+    where: { workspaceId, type: "secret" },
+    select: { name: true, data: true, iv: true },
+  });
+  const variables: Variable[] = [];
+  for (const secret of secrets) {
+    try {
+      const decrypted = (await decrypt(secret.data, secret.iv)) as {
+        value: string;
+      };
+      variables.push({
+        id: createId(),
+        name: `env.${secret.name}`,
+        value: decrypted.value,
+        isSessionVariable: true,
+      });
+    } catch {
+      // skip secrets that fail to decrypt
+    }
+  }
+  return variables;
 };

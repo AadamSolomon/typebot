@@ -30,7 +30,7 @@ export const handleCreateFolder = async ({
   if (userRole === "guest" || !workspace)
     throw new ORPCError("NOT_FOUND", { message: "Workspace not found" });
 
-  if (workspace.plan === Plan.FREE)
+  if (workspace.plan === Plan.FREE && process.env.NODE_ENV === "production")
     throw new ORPCError("FORBIDDEN", {
       message: "You need to upgrade to a paid plan to create folders",
     });

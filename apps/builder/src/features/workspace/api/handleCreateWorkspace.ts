@@ -23,7 +23,8 @@ export const handleCreateWorkspace = async ({
 }) => {
   const plan = parseWorkspaceDefaultPlan(user.email);
 
-  if (plan === "FREE") await enforceFreeTierLimits(user.id);
+  if (plan === "FREE" && process.env.NODE_ENV === "production")
+    await enforceFreeTierLimits(user.id);
 
   const existingWorkspaceNames = (await prisma.workspace.findMany({
     where: {

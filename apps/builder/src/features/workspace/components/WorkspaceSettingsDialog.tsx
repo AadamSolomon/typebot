@@ -6,6 +6,7 @@ import { EmojiOrImageIcon } from "@typebot.io/ui/components/EmojiOrImageIcon";
 import { CreditCardIcon } from "@typebot.io/ui/icons/CreditCardIcon";
 import { HardDriveIcon } from "@typebot.io/ui/icons/HardDriveIcon";
 import { Settings01Icon } from "@typebot.io/ui/icons/Settings01Icon";
+import { SquareLock01Icon } from "@typebot.io/ui/icons/SquareLock01Icon";
 import { UsersIcon } from "@typebot.io/ui/icons/UsersIcon";
 import { Wallet01Icon } from "@typebot.io/ui/icons/Wallet01Icon";
 import type { ClientUser } from "@typebot.io/user/schemas";
@@ -17,6 +18,7 @@ import { UserPreferencesForm } from "@/features/user/components/UserPreferencesF
 import packageJson from "../../../../../../package.json";
 import { useWorkspace, type WorkspaceInApp } from "../WorkspaceProvider";
 import { PeopleList } from "./PeopleList";
+import { WorkspaceSecretsForm } from "./WorkspaceSecretsForm";
 import { WorkspaceSettingsForm } from "./WorkspaceSettingsForm";
 
 type Props = {
@@ -33,7 +35,8 @@ type SettingsTab =
   | "workspace-settings"
   | "members"
   | "billing"
-  | "credentials";
+  | "credentials"
+  | "secrets";
 
 export const WorkspaceSettingsDialog = ({
   isOpen,
@@ -121,6 +124,17 @@ export const WorkspaceSettingsDialog = ({
               )}
               {currentUserMode === "write" && (
                 <Button
+                  variant={selectedTab === "secrets" ? "outline" : "ghost"}
+                  onClick={() => setSelectedTab("secrets")}
+                  className="justify-start pl-4"
+                  size="sm"
+                >
+                  <SquareLock01Icon />
+                  Secrets
+                </Button>
+              )}
+              {currentUserMode === "write" && (
+                <Button
                   variant={selectedTab === "billing" ? "outline" : "ghost"}
                   onClick={() => setSelectedTab("billing")}
                   className="justify-start pl-4 overflow-auto"
@@ -170,6 +184,8 @@ const SettingsContent = ({
       return <BillingSettingsLayout />;
     case "credentials":
       return <CredentialsSettingsForm />;
+    case "secrets":
+      return <WorkspaceSecretsForm />;
     default:
       return null;
   }

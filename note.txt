@@ -16,3 +16,23 @@
   This starts:
   - Builder (flow editor) → http://localhost:3000
   - Viewer (bot runtime) → http://localhost:3001
+
+
+What was built:
+  
+  1. DB — new WorkspaceSecret table (encrypted name/value pairs, per-workspace)
+  2. API — 3 routes: listSecrets, upsertSecret, deleteSecret under workspace.*
+  3. Session injection — at bot start, workspace secrets are decrypted and injected as variables named env.SECRETNAME
+  4. UI — "Secrets" tab in workspace settings (Settings → Secrets)
+
+  How to use it:
+
+  1. Open workspace settings → click Secrets in the left sidebar
+  2. Add a secret, e.g. Name: BEARER_TOKEN, Value: your-actual-token
+  3. In any bot in that workspace, use {{env.BEARER_TOKEN}} anywhere — in HTTP request headers, message text, conditions, etc.
+
+  Example — HTTP request Authorization header:
+  Authorization: Bearer {{env.BEARER_TOKEN}}
+
+  Changing the secret value in settings takes effect on the next bot session — no server restart needed since it reads from the DB
+  at session start.

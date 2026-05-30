@@ -14,6 +14,10 @@ import {
   handleCreateWorkspaceInvitation,
 } from "./handleCreateWorkspaceInvitation";
 import {
+  deleteSecretInputSchema,
+  handleDeleteSecret,
+} from "./handleDeleteSecret";
+import {
   deleteWorkspaceInputSchema,
   handleDeleteWorkspace,
 } from "./handleDeleteWorkspace";
@@ -38,6 +42,7 @@ import {
   handleListMembersInWorkspace,
   listMembersInWorkspaceInputSchema,
 } from "./handleListMembersInWorkspace";
+import { handleListSecrets, listSecretsInputSchema } from "./handleListSecrets";
 import { handleListWorkspaces } from "./handleListWorkspaces";
 import {
   handleUpdateWorkspace,
@@ -51,6 +56,10 @@ import {
   handleUpdateWorkspaceMember,
   updateWorkspaceMemberInputSchema,
 } from "./handleUpdateWorkspaceMember";
+import {
+  handleUpsertSecret,
+  upsertSecretInputSchema,
+} from "./handleUpsertSecret";
 
 export const workspaceRouter = {
   listWorkspaces: authenticatedProcedure
@@ -182,4 +191,33 @@ export const workspaceRouter = {
   deleteWorkspaceMember: authenticatedProcedure
     .input(deleteWorkspaceMemberInputSchema)
     .handler(handleDeleteWorkspaceMember),
+
+  listSecrets: authenticatedProcedure
+    .input(listSecretsInputSchema)
+    .output(
+      z.object({
+        secrets: z.array(
+          z.object({ id: z.string(), name: z.string(), createdAt: z.date() }),
+        ),
+      }),
+    )
+    .handler(handleListSecrets),
+
+  upsertSecret: authenticatedProcedure
+    .input(upsertSecretInputSchema)
+    .output(
+      z.object({
+        secret: z.object({
+          id: z.string(),
+          name: z.string(),
+          createdAt: z.date(),
+        }),
+      }),
+    )
+    .handler(handleUpsertSecret),
+
+  deleteSecret: authenticatedProcedure
+    .input(deleteSecretInputSchema)
+    .output(z.object({ success: z.boolean() }))
+    .handler(handleDeleteSecret),
 };
