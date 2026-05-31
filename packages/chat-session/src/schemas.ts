@@ -156,6 +156,16 @@ const sessionStateSchemaV3 = sessionStateSchemaV2
             }),
           )
           .optional(),
+        pendingLogs: z
+          .array(
+            z.object({
+              status: z.string().optional(),
+              description: z.string(),
+              details: z.string().optional(),
+              context: z.string().optional(),
+            }),
+          )
+          .optional(),
       })
       .optional(),
     publicTypebotId: z.string().optional(),

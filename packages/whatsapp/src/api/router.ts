@@ -35,6 +35,10 @@ import {
   setupMetaWebhookInputSchema,
 } from "./handleSetupMetaWebhook";
 import {
+  getWhatsAppPreviewLogsInputSchema,
+  handleGetWhatsAppPreviewLogs,
+} from "./handleGetWhatsAppPreviewLogs";
+import {
   handleStartWhatsAppPreview,
   startWhatsAppPreviewInputSchema,
 } from "./handleStartWhatsAppPreview";
@@ -99,6 +103,28 @@ export const builderWhatsAppRouter = {
       }),
     )
     .handler(handleStartWhatsAppPreview),
+
+  getWhatsAppPreviewLogs: authenticatedProcedure
+    .route({
+      method: "GET",
+      path: "/v1/typebots/{typebotId}/whatsapp/preview-logs",
+      summary: "Get preview logs",
+      tags: ["WhatsApp"],
+    })
+    .input(getWhatsAppPreviewLogsInputSchema)
+    .output(
+      z.object({
+        logs: z.array(
+          z.object({
+            status: z.string().optional(),
+            description: z.string(),
+            details: z.string().optional(),
+            context: z.string().optional(),
+          }),
+        ),
+      }),
+    )
+    .handler(handleGetWhatsAppPreviewLogs),
 
   subscribePreviewWebhook: builderPublicProcedure
     .route({

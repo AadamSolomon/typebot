@@ -2,10 +2,12 @@ import type { Block } from "@typebot.io/blocks-core/schemas/schema";
 import { InputBlockType } from "@typebot.io/blocks-inputs/constants";
 import { continueBotFlow } from "@typebot.io/bot-engine/continueBotFlow";
 import { saveStateToDatabase } from "@typebot.io/bot-engine/saveStateToDatabase";
-import type { Message } from "@typebot.io/chat-api/schemas";
+import type { ContinueChatResponse, Message } from "@typebot.io/chat-api/schemas";
 import { getSession } from "@typebot.io/chat-session/queries/getSession";
 import { upsertSession } from "@typebot.io/chat-session/queries/upsertSession";
 import type { SessionState } from "@typebot.io/chat-session/schemas";
+import type { Prisma } from "@typebot.io/prisma/types";
+import type { SetVariableHistoryItem } from "@typebot.io/variables/schemas";
 import { decrypt } from "@typebot.io/credentials/decrypt";
 import { getCredentials } from "@typebot.io/credentials/getCredentials";
 import type { WhatsAppCredentials } from "@typebot.io/credentials/schemas";
@@ -166,6 +168,30 @@ export const resumeWhatsAppFlow = async ({
       referral,
     });
 
+    const stateWithPendingLogs =
+      logs && logs.length > 0
+        ? {
+            ...newSessionState,
+            currentBlockId:
+              !input && !isWaitingForWebhook
+                ? undefined
+                : newSessionState.currentBlockId,
+            previewMetadata: {
+              ...newSessionState.previewMetadata,
+              pendingLogs: [
+                ...(newSessionState.previewMetadata?.pendingLogs ?? []),
+                ...logs,
+              ],
+            },
+          }
+        : {
+            ...newSessionState,
+            currentBlockId:
+              !input && !isWaitingForWebhook
+                ? undefined
+                : newSessionState.currentBlockId,
+          };
+
     await saveStateToDatabase({
       clientSideActions: [],
       input,
@@ -175,13 +201,7 @@ export const resumeWhatsAppFlow = async ({
         id: sessionId,
       },
       session: {
-        state: {
-          ...newSessionState,
-          currentBlockId:
-            !input && !isWaitingForWebhook
-              ? undefined
-              : newSessionState.currentBlockId,
-        },
+        state: stateWithPendingLogs,
       },
       isWaitingForExternalEvent: isWaitingForWebhook,
       visitedEdges,
@@ -448,6 +468,15 @@ const aggregateParallelMediaMessagesIfRedisEnabled = async ({
   };
 };
 
+type ResumeFlowResult = {
+  input: ContinueChatResponse["input"];
+  logs: ContinueChatResponse["logs"];
+  visitedEdges: Prisma.VisitedEdge[];
+  setVariableHistory: SetVariableHistoryItem[];
+  newSessionState: SessionState;
+  isWaitingForWebhook: boolean;
+};
+
 const resumeFlowAndSendWhatsAppMessages = async (props: {
   to: string;
   messageId: string | undefined;
@@ -460,7 +489,7 @@ const resumeFlowAndSendWhatsAppMessages = async (props: {
   isSessionExpired: boolean | null;
   credentialsId?: string;
   workspaceId?: string;
-}) => {
+}): Promise<ResumeFlowResult> => {
   if (props.messageId) {
     sendWhatsAppTypingIndicator({
       messageId: props.messageId,
@@ -490,8 +519,8 @@ const resumeFlowAndSendWhatsAppMessages = async (props: {
     credentials: props.credentials,
     state: newSessionState,
   });
-  if (result?.type === "replyToSend")
-    return resumeFlowAndSendWhatsAppMessages({
+  if (result?.type === "replyToSend") {
+    const nextResult = await resumeFlowAndSendWhatsAppMessages({
       ...props,
       state: newSessionState,
       reply: result.replyToSend
@@ -501,6 +530,13 @@ const resumeFlowAndSendWhatsAppMessages = async (props: {
           }
         : undefined,
     });
+    return {
+      ...nextResult,
+      logs: logs?.length
+        ? [...logs, ...(nextResult.logs ?? [])]
+        : nextResult.logs,
+    };
+  }
 
   return {
     input,

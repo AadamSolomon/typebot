@@ -16,7 +16,7 @@ export const PreviewDrawerBody = ({ runtime, onNewLogs }: Props): JSX.Element =>
       return <WebPreview onNewLogs={onNewLogs} />;
     }
     case "WhatsApp": {
-      return <WhatsAppPreviewInstructions />;
+      return <WhatsAppPreviewInstructions onNewLogs={onNewLogs} />;
     }
     case "API": {
       return <ApiPreviewInstructions className="pt-4" />;

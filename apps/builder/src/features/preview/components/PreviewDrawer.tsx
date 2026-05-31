@@ -54,6 +54,7 @@ export const PreviewDrawer = () => {
       ...prev,
       ...logs.map((log) => ({ ...log, receivedAt: new Date() })),
     ]);
+    setShowConsole(true);
   };
 
   const handleRestartClick = async () => {
@@ -80,6 +81,7 @@ export const PreviewDrawer = () => {
     runtime: (typeof runtimes)[number],
   ) => {
     setSelectedRuntime(runtime);
+    setConsoleLogs([]);
     localStorage.setItem(preferredRuntimeKey, runtime.name);
   };
 
@@ -100,24 +102,22 @@ export const PreviewDrawer = () => {
               onSelectRuntime={setPreviewRuntimeAndSaveIntoLocalStorage}
             />
             {selectedRuntime.name === "Web" ? (
-              <>
-                <Button
-                  onClick={handleRestartClick}
-                  disabled={isSavingLoading}
-                  variant="ghost"
-                >
-                  {t("preview.restartButton.label")}
-                </Button>
-                <Button
-                  variant={showConsole ? "secondary" : "ghost"}
-                  size="icon"
-                  aria-label="Toggle console"
-                  onClick={() => setShowConsole((v) => !v)}
-                >
-                  <CodeIcon />
-                </Button>
-              </>
+              <Button
+                onClick={handleRestartClick}
+                disabled={isSavingLoading}
+                variant="ghost"
+              >
+                {t("preview.restartButton.label")}
+              </Button>
             ) : null}
+            <Button
+              variant={showConsole ? "secondary" : "ghost"}
+              size="icon"
+              aria-label="Toggle console"
+              onClick={() => setShowConsole((v) => !v)}
+            >
+              <CodeIcon />
+            </Button>
           </div>
 
           <Button onClick={handleCloseClick} variant="secondary" size="icon">
@@ -129,7 +129,7 @@ export const PreviewDrawer = () => {
             runtime={selectedRuntime.name}
             onNewLogs={handleNewLogs}
           />
-          {showConsole && selectedRuntime.name === "Web" && (
+          {showConsole && (
             <ConsolePanel
               logs={consoleLogs}
               onClear={() => setConsoleLogs([])}

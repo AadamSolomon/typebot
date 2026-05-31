@@ -1,4 +1,5 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import type { ContinueChatResponse } from "@typebot.io/chat-api/schemas";
 import { isEmpty } from "@typebot.io/lib/utils";
 import { Alert } from "@typebot.io/ui/components/Alert";
 import { Button } from "@typebot.io/ui/components/Button";
@@ -8,7 +9,7 @@ import { ArrowUpRight01Icon } from "@typebot.io/ui/icons/ArrowUpRight01Icon";
 import { Book02Icon } from "@typebot.io/ui/icons/Book02Icon";
 import { CheckmarkSquare02Icon } from "@typebot.io/ui/icons/CheckmarkSquare02Icon";
 import { cn } from "@typebot.io/ui/lib/cn";
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useEffect, useRef, useState } from "react";
 import { ButtonLink } from "@/components/ButtonLink";
 import { useEditor } from "@/features/editor/providers/EditorProvider";
 import { useTypebot } from "@/features/editor/providers/TypebotProvider";
@@ -16,8 +17,10 @@ import { orpc } from "@/lib/queryClient";
 
 export const WhatsAppPreviewInstructions = ({
   className,
+  onNewLogs,
 }: {
   className?: string;
+  onNewLogs: (logs: ContinueChatResponse["logs"]) => void;
 }) => {
   const { typebot, save } = useTypebot();
   const { startPreviewFrom } = useEditor();
@@ -26,6 +29,22 @@ export const WhatsAppPreviewInstructions = ({
   const [isMessageSent, setIsMessageSent] = useState(false);
   const [hasMessageBeenSent, setHasMessageBeenSent] = useState(false);
   const [requiresManualStart, setRequiresManualStart] = useState(false);
+  const [isPollingLogs, setIsPollingLogs] = useState(false);
+  const onNewLogsRef = useRef(onNewLogs);
+  onNewLogsRef.current = onNewLogs;
+
+  const { data: logsData } = useQuery({
+    ...orpc.whatsApp.getWhatsAppPreviewLogs.queryOptions({
+      input: { typebotId: typebot?.id ?? "", phoneNumber },
+    }),
+    enabled: isPollingLogs && !!typebot?.id && !!phoneNumber,
+    refetchInterval: 2000,
+  });
+
+  useEffect(() => {
+    if (!logsData?.logs?.length) return;
+    onNewLogsRef.current(logsData.logs);
+  }, [logsData]);
 
   const { mutate } = useMutation(
     orpc.whatsApp.startWhatsAppPreview.mutationOptions({
@@ -36,6 +55,7 @@ export const WhatsAppPreviewInstructions = ({
         setRequiresManualStart(needsManual);
         setHasMessageBeenSent(true);
         setIsMessageSent(true);
+        setIsPollingLogs(true);
         setTimeout(() => setIsMessageSent(false), 30000);
       },
     }),

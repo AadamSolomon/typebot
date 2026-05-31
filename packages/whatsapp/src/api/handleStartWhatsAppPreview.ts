@@ -172,6 +172,18 @@ export const handleStartWhatsAppPreview = async ({
           credentials: previewCredentials,
           state: newSessionState,
         });
+        const stateWithPendingLogs = logs?.length
+          ? {
+              ...newSessionState,
+              previewMetadata: {
+                ...newSessionState.previewMetadata,
+                pendingLogs: [
+                  ...(newSessionState.previewMetadata?.pendingLogs ?? []),
+                  ...logs,
+                ],
+              },
+            }
+          : newSessionState;
         await saveStateToDatabase({
           clientSideActions: [],
           input,
@@ -181,7 +193,7 @@ export const handleStartWhatsAppPreview = async ({
             id: sessionId,
           },
           session: {
-            state: newSessionState,
+            state: stateWithPendingLogs,
           },
           visitedEdges,
           setVariableHistory,

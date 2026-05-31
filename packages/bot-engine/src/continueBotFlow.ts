@@ -113,6 +113,7 @@ export const continueBotFlow = async (
   newSessionState = nonInputProcessResult.newSessionState;
   setVariableHistory.push(...nonInputProcessResult.setVariableHistory);
   const { firstBubbleWasStreamed } = nonInputProcessResult;
+  const nonInputLogs = nonInputProcessResult.logs ?? [];
 
   let continueReply: SuccessReply | SkipReply | undefined;
 
@@ -238,6 +239,7 @@ export const continueBotFlow = async (
       lastMessageNewFormat,
       visitedEdges: [],
       setVariableHistory,
+      logs: nonInputLogs.length > 0 ? nonInputLogs : undefined,
     };
 
   const walkStartingPoint =
@@ -293,9 +295,9 @@ export const continueBotFlow = async (
       clientSideActions: executionResponse.clientSideActions.concat(
         resumeContinueFlowResponse.clientSideActions ?? [],
       ),
-      logs: executionResponse.logs.concat(
-        resumeContinueFlowResponse.logs ?? [],
-      ),
+      logs: nonInputLogs
+        .concat(executionResponse.logs)
+        .concat(resumeContinueFlowResponse.logs ?? []),
       setVariableHistory: executionResponse.setVariableHistory.concat(
         resumeContinueFlowResponse.setVariableHistory ?? [],
       ),
@@ -309,7 +311,9 @@ export const continueBotFlow = async (
     messages: executionResponse.messages,
     input: executionResponse.input,
     clientSideActions: executionResponse.clientSideActions,
-    logs: executionResponse.logs,
+    logs: nonInputLogs.length > 0
+      ? nonInputLogs.concat(executionResponse.logs)
+      : executionResponse.logs,
     newSessionState: executionResponse.newSessionState,
     visitedEdges: executionResponse.visitedEdges,
     setVariableHistory: executionResponse.setVariableHistory,
@@ -333,12 +337,14 @@ const processNonInputBlock = async ({
       newSessionState: state,
       setVariableHistory: [],
       firstBubbleWasStreamed: false,
+      logs: undefined as ContinueChatResponse["logs"],
     };
 
   const setVariableHistory: SetVariableHistoryItem[] = [];
   let variableToUpdate: Variable | undefined;
   let newSessionState = state;
   let firstBubbleWasStreamed = false;
+  let processedLogs: ContinueChatResponse["logs"];
 
   if (block.type === LogicBlockType.SET_VARIABLE) {
     const existingVariable = state.typebotsQueue[0].typebot.variables.find(
@@ -396,6 +402,7 @@ const processNonInputBlock = async ({
       sessionStore,
     });
     if (result.newSessionState) newSessionState = result.newSessionState;
+    if (result.logs) processedLogs = result.logs;
   } else if (isForgedBlockType(block.type)) {
     if (reply) {
       const options = (block as ForgedBlock).options;
@@ -445,6 +452,7 @@ const processNonInputBlock = async ({
     newSessionState,
     setVariableHistory,
     firstBubbleWasStreamed,
+    logs: processedLogs,
   };
 };
 
