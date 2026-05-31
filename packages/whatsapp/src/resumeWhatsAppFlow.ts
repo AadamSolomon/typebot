@@ -33,6 +33,7 @@ import { WhatsAppError } from "./WhatsAppError";
 
 const MESSAGE_TOO_OLD_ELAPSED_MS = 3 * 60 * 1000; // 3 minutes
 const RESET_EMPTY_SESSION_AFTER_MS = 10 * 60 * 1000; // 10 minutes
+const STALE_REPLY_LOCK_MS = 30 * 1000; // 30 seconds
 const INCOMING_MEDIA_MESSAGE_DEBOUNCE = 3_000;
 
 type Props = {
@@ -124,7 +125,11 @@ export const resumeWhatsAppFlow = async ({
     isDefined(session.state.expiryTimeout) &&
     session?.updatedAt.getTime() + session.state.expiryTimeout < Date.now();
 
-  if (!isSessionExpired && session?.isReplying && callFrom !== "webhook")
+  const isReplyLockStale =
+    session?.isReplying &&
+    session.updatedAt.getTime() + STALE_REPLY_LOCK_MS < Date.now();
+
+  if (!isSessionExpired && session?.isReplying && !isReplyLockStale && callFrom !== "webhook")
     throw new WhatsAppError("Is in reply state");
   if (aggregationResponse.status === "treat as unique message") {
     await upsertSession(sessionId, {

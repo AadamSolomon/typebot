@@ -136,7 +136,7 @@ export const handleStartWhatsAppPreview = async ({
 
   return withSessionStore(sessionId, async (sessionStore) => {
     const {
-      newSessionState,
+      newSessionState: rawSessionState,
       messages,
       input,
       clientSideActions,
@@ -160,6 +160,27 @@ export const handleStartWhatsAppPreview = async ({
           ?.whatsApp,
       },
     });
+
+    // Stable result record so logs are written to DB and appear in Live Logs.
+    // Keyed on sessionId so the same phone number always reuses the same record.
+    const previewResultId = `preview-${sessionId}`;
+    await prisma.result.upsert({
+      where: { id: previewResultId },
+      create: {
+        id: previewResultId,
+        typebotId: existingTypebot.id,
+        isCompleted: false,
+        hasStarted: true,
+        variables: [],
+      },
+      update: {},
+    });
+    const newSessionState: SessionState = {
+      ...rawSessionState,
+      typebotsQueue: rawSessionState.typebotsQueue.map((item, i) =>
+        i === 0 ? { ...item, resultId: previewResultId } : item,
+      ),
+    };
 
     try {
       if (canSendDirectMessagesToUser) {

@@ -15,7 +15,7 @@ import type { ResultsTablePreferences } from "@typebot.io/typebot/schemas/typebo
 import { Button } from "@typebot.io/ui/components/Button";
 import { Checkbox } from "@typebot.io/ui/components/Checkbox";
 import { TextAlignLeftIcon } from "@typebot.io/ui/icons/TextAlignLeftIcon";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { TimeFilterSelect } from "@/features/analytics/components/TimeFilterSelect";
 import { useTypebot } from "@/features/editor/providers/TypebotProvider";
 import { HeaderIcon } from "../HeaderIcon";
@@ -33,7 +33,7 @@ type ResultsTableProps = {
   timeFilter: TimeFilter;
   onTimeFilterChange: (timeFilter: TimeFilter) => void;
   onScrollToBottom: () => void;
-  onLogOpenIndex: (index: number) => () => void;
+  onLogsOpen: () => void;
   onResultExpandIndex: (index: number) => () => void;
 };
 
@@ -45,7 +45,7 @@ export const ResultsTable = ({
   timeFilter,
   onTimeFilterChange,
   onScrollToBottom,
-  onLogOpenIndex,
+  onLogsOpen,
   onResultExpandIndex,
 }: ResultsTableProps) => {
   const { updateTypebot, currentUserMode } = useTypebot();
@@ -105,7 +105,7 @@ export const ResultsTable = ({
     });
   };
 
-  const columns = React.useMemo<ColumnDef<TableData>[]>(
+  const columns = useMemo<ColumnDef<TableData>[]>(
     () => [
       {
         id: "select",
@@ -150,28 +150,8 @@ export const ResultsTable = ({
           return value.element || value.plainText || "";
         },
       })),
-      {
-        id: "logs",
-        enableResizing: false,
-        maxSize: 110,
-        header: () => (
-          <div className="flex items-center gap-2">
-            <TextAlignLeftIcon />
-            <p>Logs</p>
-          </div>
-        ),
-        cell: ({ row }) => (
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={onLogOpenIndex(row.index)}
-          >
-            See logs
-          </Button>
-        ),
-      },
     ],
-    [onLogOpenIndex, resultHeader],
+    [resultHeader],
   );
 
   const instance = useReactTable({
@@ -224,6 +204,15 @@ export const ResultsTable = ({
           timeFilter={timeFilter}
           onTimeFilterChange={onTimeFilterChange}
         />
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={onLogsOpen}
+          className="flex items-center gap-2"
+        >
+          <TextAlignLeftIcon />
+          Logs
+        </Button>
         <TableSettingsButton
           resultHeader={resultHeader}
           columnVisibility={columnsVisibility}

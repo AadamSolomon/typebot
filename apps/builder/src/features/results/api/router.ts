@@ -21,6 +21,10 @@ import {
 } from "./handleGetResultLogs";
 import { getResultsInputSchema, handleGetResults } from "./handleGetResults";
 import {
+  getTypebotLogsInputSchema,
+  handleGetTypebotLogs,
+} from "./handleGetTypebotLogs";
+import {
   getResultTranscriptInputSchema,
   handleGetResultTranscript,
 } from "./handleGetResultTranscript";
@@ -103,6 +107,17 @@ export const resultsRouter = {
     .input(getResultLogsInputSchema)
     .output(z.object({ logs: z.array(logSchema) }))
     .handler(handleGetResultLogs),
+
+  getTypebotLogs: authenticatedProcedure
+    .route({
+      method: "GET",
+      path: "/v1/typebots/{typebotId}/logs",
+      summary: "List all logs for a typebot across all results",
+      tags: ["Results"],
+    })
+    .input(getTypebotLogsInputSchema)
+    .output(z.object({ logs: z.array(logSchema) }))
+    .handler(handleGetTypebotLogs),
 
   deleteResults: authenticatedProcedure
     .route({
