@@ -14,6 +14,10 @@ import { httpRequestRouter } from "@/features/blocks/integrations/httpRequest/ap
 import { openAIRouter } from "@/features/blocks/integrations/openai/api/router";
 import { emailRouter } from "@/features/blocks/integrations/sendEmail/api/router";
 import { getLinkedTypebots } from "@/features/blocks/logic/typebotLink/api/getLinkedTypebots";
+import {
+  scriptsRouter,
+  type ScriptsRouter,
+} from "@/features/blocks/logic/script/api/router";
 import { collaboratorsRouter } from "@/features/collaboration/api/router";
 import { credentialsRouter } from "@/features/credentials/api/router";
 import { customDomainsRouter } from "@/features/customDomains/api/router";
@@ -80,6 +84,7 @@ export const appRouter: AppRouter = {
   email: emailRouter,
   telemetry: telemetryRouter,
   generateGroupTitle,
+  scripts: scriptsRouter,
   chat: builderChatRouter,
   credentials: credentialsRouter,
   featureFlags: featureFlagsRouter,
@@ -112,6 +117,7 @@ export type AppRouter = {
   email: typeof emailRouter;
   telemetry: typeof telemetryRouter;
   generateGroupTitle: typeof generateGroupTitle;
+  scripts: ScriptsRouter;
   chat: typeof builderChatRouter;
   credentials: typeof credentialsRouter;
   featureFlags: typeof featureFlagsRouter;

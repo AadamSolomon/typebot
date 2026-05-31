@@ -96,6 +96,9 @@ export const ChatContainer = (props: Props) => {
     storage: props.context.storage,
   });
   const [isSending, setIsSending] = createSignal(false);
+  const [pendingVariableUpdates, setPendingVariableUpdates] = createSignal<
+    { name: string; value: unknown }[]
+  >([]);
   const [isLastAutoScrollAtBottom, setIsLastAutoScrollAtBottom] =
     createSignal(true);
 
@@ -208,10 +211,13 @@ export const ChatContainer = (props: Props) => {
     }, 1000);
     autoScrollToBottom();
 
+    const updates = pendingVariableUpdates();
+    setPendingVariableUpdates([]);
     const { data, error } = await continueChatQuery({
       apiHost: props.context.apiHost,
       sessionId: props.initialChatReply.sessionId,
       message: convertSubmitContentToMessage(answer),
+      variableUpdates: updates.length > 0 ? updates : undefined,
     });
     clearTimeout(longRequest);
     setIsSending(false);
@@ -370,6 +376,8 @@ export const ChatContainer = (props: Props) => {
 
       setChatChunks(popClientSideAction);
       if (response && "logs" in response) saveLogs(response.logs);
+      if (response && "variableUpdates" in response && response.variableUpdates)
+        setPendingVariableUpdates((prev) => [...prev, ...response.variableUpdates!]);
       if (response && "replyToSend" in response) {
         setIsSending(false);
         sendMessage(
@@ -377,6 +385,11 @@ export const ChatContainer = (props: Props) => {
             ? { type: "clientSideResult", result: response.replyToSend }
             : undefined,
         );
+        return;
+      }
+      if ("scriptToExecute" in action && action.expectsDedicatedReply) {
+        setIsSending(false);
+        sendMessage(undefined);
         return;
       }
       if (response && "blockedPopupUrl" in response) {
@@ -393,7 +406,7 @@ export const ChatContainer = (props: Props) => {
           },
         });
       }
-      if (response && "scriptCallbackMessage" in response)
+      if (response && "scriptCallbackMessage" in response && typeof response.scriptCallbackMessage === "string")
         props.onScriptExecutionSuccess?.(response.scriptCallbackMessage);
     }
   };

@@ -11,6 +11,7 @@ import { assertOriginIsAllowed } from "../helpers/assertOriginIsAllowed";
 import { filterPotentiallySensitiveLogs } from "../logs/filterPotentiallySensitiveLogs";
 import { parseDynamicTheme } from "../parseDynamicTheme";
 import { saveStateToDatabase } from "../saveStateToDatabase";
+import { updateVariablesInSession } from "../updateVariablesInSession";
 
 export const continueChatInputSchema = z.object({
   message: messageSchema.nullish(),
@@ -20,6 +21,9 @@ export const continueChatInputSchema = z.object({
       "The session ID you got from the [startChat](./start-chat) response.",
     ),
   textBubbleContentFormat: z.enum(["richText", "markdown"]).default("richText"),
+  variableUpdates: z
+    .array(z.object({ name: z.string(), value: z.unknown() }))
+    .optional(),
 });
 
 type Context = {
@@ -28,7 +32,7 @@ type Context = {
 };
 
 export const handleContinueChat = async ({
-  input: { sessionId, message, textBubbleContentFormat },
+  input: { sessionId, message, textBubbleContentFormat, variableUpdates },
   context: { origin, iframeReferrerOrigin },
 }: {
   input: z.infer<typeof continueChatInputSchema>;
@@ -57,7 +61,24 @@ export const handleContinueChat = async ({
       message: "Session expired. You need to start a new session.",
     });
 
-  const sessionState = session.state;
+  let sessionState = session.state;
+
+  if (variableUpdates?.length) {
+    const currentVariables = sessionState.typebotsQueue[0]?.typebot.variables ?? [];
+    const resolvedUpdates = variableUpdates.flatMap(({ name, value }) => {
+      const existing = currentVariables.find((v) => v.name === name);
+      if (!existing) return [];
+      return [{ id: existing.id, name: existing.name, value }];
+    });
+    if (resolvedUpdates.length > 0) {
+      const { updatedState } = updateVariablesInSession({
+        state: sessionState,
+        newVariables: resolvedUpdates,
+        currentBlockId: undefined,
+      });
+      sessionState = updatedState;
+    }
+  }
 
   return withSessionStore(sessionId, async (sessionStore) => {
     const {

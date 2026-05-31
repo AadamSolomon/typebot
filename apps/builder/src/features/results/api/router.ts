@@ -32,6 +32,10 @@ import {
   handleTriggerSendExportResultsToEmail,
   triggerSendExportResultsToEmailInputSchema,
 } from "./handleTriggerSendExportResultsToEmail";
+import {
+  handleResetAllChatSessions,
+  resetAllChatSessionsInputSchema,
+} from "./handleResetAllChatSessions";
 
 export const resultsRouter = {
   getResults: authenticatedProcedure
@@ -157,4 +161,9 @@ export const resultsRouter = {
     )
     .input(triggerSendExportResultsToEmailInputSchema)
     .handler(handleTriggerSendExportResultsToEmail),
+
+  resetAllChatSessions: authenticatedProcedure
+    .input(resetAllChatSessionsInputSchema)
+    .output(z.object({ deletedCount: z.number() }))
+    .handler(handleResetAllChatSessions),
 };

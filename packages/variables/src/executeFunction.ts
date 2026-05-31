@@ -47,17 +47,53 @@ export const executeFunction = async ({
   );
 
   const variableUpdates = new Map<string, unknown>();
+  const scriptLogs: { status: "info"; description: string; context: "Script" }[] =
+    [];
 
   const setVariable = (key: string, value: any) => {
     variableUpdates.set(key, value);
   };
 
+  // Checks pending updates first so _vars["x"] reflects a prior setVariable("x", …)
+  const getVariable = (key: string): unknown => {
+    if (variableUpdates.has(key)) return variableUpdates.get(key);
+    const variable = variables.find((v) => v.name === key);
+    return variable ? parseGuessedValueType(variable.value) : undefined;
+  };
+
+  const consoleLog = (...args: unknown[]) => {
+    scriptLogs.push({
+      status: "info",
+      description: args.map(formatLogArg).join(" "),
+      context: "Script",
+    });
+  };
+
   const context = sessionStore.getOrCreateIsolate().createContextSync();
   const jail = context.global;
   jail.setSync("global", jail.derefInto());
+  // Use applySync for all pure in-memory bridges (no async I/O) so they return
+  // plain values instead of Promises. This avoids floating unhandled Promises in
+  // the VM which can trigger "Promise could not be cloned" errors in isolated-vm.
   context.evalClosure(
-    "globalThis.setVariable = (...args) => $0.apply(undefined, args, { arguments: { copy: true }, promise: true, result: { copy: true, promise: true } })",
+    "globalThis.setVariable = (...args) => { $0.applySync(undefined, args, { arguments: { copy: true } }); }",
     [new Reference(setVariable)],
+  );
+  context.evalClosure(
+    "globalThis.getVariable = (...args) => $0.applySync(undefined, args, { arguments: { copy: true }, result: { copy: true } })",
+    [new Reference(getVariable)],
+  );
+  context.evalClosure(
+    "globalThis.console = { log: (...args) => { $0.applySync(undefined, args, { arguments: { copy: true } }); } }",
+    [new Reference(consoleLog)],
+  );
+  // _vars proxy: same API as the client-side sandbox, reads reflect setVariable updates
+  context.evalClosure(
+    `globalThis._vars = new Proxy({}, {
+      get(_, prop) { return typeof prop === 'string' ? getVariable(prop) : undefined; },
+      set(_, prop, value) { if (typeof prop === 'string') setVariable(prop, value); return true; }
+    });`,
+    [],
   );
   context.evalClosure(
     "globalThis.fetch = (...args) => $0.apply(undefined, args, { arguments: { copy: true }, promise: true, result: { copy: true, promise: true } })",
@@ -134,6 +170,7 @@ export const executeFunction = async ({
           };
         })
         .filter(isDefined),
+      logs: scriptLogs,
     };
   } catch (e) {
     context.release();
@@ -150,6 +187,18 @@ export const executeFunction = async ({
     return {
       error,
       output: error,
+      logs: scriptLogs,
     };
+  }
+};
+
+const formatLogArg = (arg: unknown): string => {
+  if (arg === null) return "null";
+  if (arg === undefined) return "undefined";
+  if (typeof arg !== "object") return String(arg);
+  try {
+    return JSON.stringify(arg);
+  } catch {
+    return String(arg);
   }
 };

@@ -47,19 +47,40 @@ self.SharedWorker = () => {
   console.warn("Shared workers are disabled in preview mode.");
 };
 
+const formatWorkerLogArg = (arg) => {
+  if (arg === null) return "null";
+  if (arg === undefined) return "undefined";
+  if (typeof arg !== "object") return String(arg);
+  try { return JSON.stringify(arg); } catch { return String(arg); }
+};
+
 self.onmessage = async (event) => {
   const { id, code, args = {} } = event.data;
+  const workerLogs = [];
+  const workerVariableUpdates = [];
+  const consoleProxy = {
+    log: (...logArgs) => {
+      console.log(...logArgs);
+      workerLogs.push({
+        status: "info",
+        description: logArgs.map(formatWorkerLogArg).join(" "),
+        context: "Script",
+      });
+    },
+  };
+  const setVariable = (name, value) => {
+    workerVariableUpdates.push({ name, value });
+  };
 
   try {
     const argNames = Object.keys(args);
     const argValues = Object.values(args);
 
-    // Create an async function with the given args
-    const userFunc = new AsyncFunction(...argNames, code);
+    const userFunc = new AsyncFunction(...argNames, "console", "setVariable", code);
 
-    const result = await userFunc(...argValues);
+    const result = await userFunc(...argValues, consoleProxy, setVariable);
 
-    const message = { id, ok: true, result };
+    const message = { id, ok: true, result, logs: workerLogs, variableUpdates: workerVariableUpdates };
     self.postMessage(message);
   } catch (err) {
     const message = {
@@ -71,6 +92,8 @@ self.onmessage = async (event) => {
           : typeof err === "string"
             ? err
             : JSON.stringify(err),
+      logs: workerLogs,
+      variableUpdates: workerVariableUpdates,
     };
     self.postMessage(message);
   }
@@ -110,16 +133,20 @@ type WorkerRequest = {
   args: Record<string, unknown>;
 };
 
+type ScriptLog = { status: "info"; description: string; context: "Script" };
+
+type VariableUpdate = { name: string; value: unknown };
+
 type WorkerResponse =
-  | { id: number; ok: true; result: unknown }
-  | { id: number; ok: false; error: string };
+  | { id: number; ok: true; result: unknown; logs: ScriptLog[]; variableUpdates: VariableUpdate[] }
+  | { id: number; ok: false; error: string; logs: ScriptLog[]; variableUpdates: VariableUpdate[] };
 
 let nextId = 0;
 
 export const runUserCodeInWorker = async (
   code: string,
   args: Record<string, unknown>,
-): Promise<unknown> => {
+): Promise<{ value: unknown; logs: ScriptLog[]; variableUpdates: VariableUpdate[] }> => {
   const worker = await getScriptRunnerWorker();
 
   return new Promise((resolve, reject) => {
@@ -131,7 +158,7 @@ export const runUserCodeInWorker = async (
 
       worker.removeEventListener("message", listener);
 
-      if (msg.ok) resolve(msg.result);
+      if (msg.ok) resolve({ value: msg.result, logs: msg.logs, variableUpdates: msg.variableUpdates });
       else reject(new Error(msg.error));
     };
 

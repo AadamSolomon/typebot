@@ -1,6 +1,7 @@
 import { useTranslate } from "@tolgee/react";
 import { isDefined, isNotDefined } from "@typebot.io/lib/utils";
 import { Plan } from "@typebot.io/prisma/enum";
+import { AlertDialog } from "@typebot.io/ui/components/AlertDialog";
 import { Button } from "@typebot.io/ui/components/Button";
 import { Tooltip } from "@typebot.io/ui/components/Tooltip";
 import { useOpenControls } from "@typebot.io/ui/hooks/useOpenControls";
@@ -11,11 +12,15 @@ import { LayoutBottomIcon } from "@typebot.io/ui/icons/LayoutBottomIcon";
 import { LoaderCircleIcon } from "@typebot.io/ui/icons/LoaderCircleIcon";
 import { PlayIcon } from "@typebot.io/ui/icons/PlayIcon";
 import { Redo03Icon } from "@typebot.io/ui/icons/Redo03Icon";
+import { TrashIcon } from "@typebot.io/ui/icons/TrashIcon";
 import { Undo03Icon } from "@typebot.io/ui/icons/Undo03Icon";
 import { cn } from "@typebot.io/ui/lib/cn";
+import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/router";
 import { useState } from "react";
 import { useDebouncedCallback } from "use-debounce";
+import { orpc } from "@/lib/queryClient";
+import { toast } from "@/lib/toast";
 import { ButtonLink } from "@/components/ButtonLink";
 import { EditableEmojiOrImageIcon } from "@/components/EditableEmojiOrImageIcon";
 import { SupportBubble } from "@/components/SupportBubble";
@@ -25,6 +30,7 @@ import { useWorkspace } from "@/features/workspace/WorkspaceProvider";
 import { isCloudProdInstance } from "@/helpers/isCloudProdInstance";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { useRightPanel } from "@/hooks/useRightPanel";
+import { VSCodeSyncButton } from "@/features/blocks/logic/script/components/VSCodeSyncButton";
 import { useEditor } from "../providers/EditorProvider";
 import { useTypebot } from "../providers/TypebotProvider";
 import { EditableTypebotName } from "./EditableTypebotName";
@@ -253,9 +259,25 @@ const RightElements = ({
 }) => {
   const router = useRouter();
   const { t } = useTranslate();
-  const { typebot, currentUserMode, save, isSavingLoading } = useTypebot();
+  const { typebot, publishedTypebot, currentUserMode, save, isSavingLoading } =
+    useTypebot();
   const { setStartPreviewFrom } = useEditor();
   const [rightPanel, setRightPanel] = useRightPanel();
+  const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
+
+  const { mutate: resetAllChats, isPending: isResetting } = useMutation(
+    orpc.results.resetAllChatSessions.mutationOptions({
+      onSuccess: ({ deletedCount }) => {
+        setIsResetDialogOpen(false);
+        toast({
+          description:
+            deletedCount === 0
+              ? "No active sessions to reset."
+              : `Reset ${deletedCount} active session${deletedCount === 1 ? "" : "s"}.`,
+        });
+      },
+    }),
+  );
 
   const handlePreviewClick = async () => {
     setStartPreviewFrom(undefined);
@@ -273,6 +295,7 @@ const RightElements = ({
       <div className="flex relative">
         <ShareTypebotButton isLoading={isNotDefined(typebot)} />
       </div>
+      {router.pathname.includes("/edit") && <VSCodeSyncButton />}
       {router.pathname.includes("/edit") && rightPanel !== "preview" && (
         <Button
           variant="secondary"
@@ -285,6 +308,49 @@ const RightElements = ({
             {t("editor.header.previewButton.label")}
           </span>
         </Button>
+      )}
+      {currentUserMode === "write" && isDefined(publishedTypebot) && (
+        <>
+          <Tooltip.Root>
+            <Tooltip.TriggerButton
+              size="icon"
+              variant="secondary"
+              className="size-8"
+              aria-label="Reset all active chats"
+              onClick={() => setIsResetDialogOpen(true)}
+            >
+              <TrashIcon />
+            </Tooltip.TriggerButton>
+            <Tooltip.Popup>Reset all active chats</Tooltip.Popup>
+          </Tooltip.Root>
+          <AlertDialog.Root
+            isOpen={isResetDialogOpen}
+            onClose={() => setIsResetDialogOpen(false)}
+          >
+            <AlertDialog.Content>
+              <AlertDialog.Header>
+                <AlertDialog.Title>Reset all active chats?</AlertDialog.Title>
+                <AlertDialog.Description>
+                  All ongoing conversations will be ended. Users will start from
+                  the beginning next time they message the bot. Past results are
+                  preserved.
+                </AlertDialog.Description>
+              </AlertDialog.Header>
+              <AlertDialog.Footer>
+                <AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
+                <AlertDialog.Action
+                  variant="destructive"
+                  disabled={isResetting}
+                  onClick={() =>
+                    typebot && resetAllChats({ typebotId: typebot.id })
+                  }
+                >
+                  Reset all chats
+                </AlertDialog.Action>
+              </AlertDialog.Footer>
+            </AlertDialog.Content>
+          </AlertDialog.Root>
+        </>
       )}
       {currentUserMode === "guest" && (
         <ButtonLink

@@ -3,7 +3,6 @@ import type { ScriptBlock } from "@typebot.io/blocks-logic/script/schema";
 import type { SessionState } from "@typebot.io/chat-session/schemas";
 import type { SessionStore } from "@typebot.io/runtime-session-store";
 import { executeFunction } from "@typebot.io/variables/executeFunction";
-import { extractVariablesFromText } from "@typebot.io/variables/extractVariablesFromText";
 import { parseGuessedValueType } from "@typebot.io/variables/parseGuessedValueType";
 import { parseVariables } from "@typebot.io/variables/parseVariables";
 import type { Variable } from "@typebot.io/variables/schemas";
@@ -27,7 +26,7 @@ export const executeScript = async (
     block.options.isExecutedOnClient ?? defaultScriptOptions.isExecutedOnClient;
 
   if (!isExecutedOnClient) {
-    const { newVariables, error } = await executeFunction({
+    const { newVariables, error, logs: functionLogs } = await executeFunction({
       variables,
       body: block.options.content,
       sessionStore,
@@ -49,7 +48,7 @@ export const executeScript = async (
 
     return {
       outgoingEdgeId: block.outgoingEdgeId,
-      logs: error ? [error] : [],
+      logs: [...(functionLogs ?? []), ...(error ? [error] : [])],
       newSessionState,
       newSetVariableHistory: updateVarResults?.newSetVariableHistory,
     };
@@ -61,6 +60,8 @@ export const executeScript = async (
     sessionStore,
   );
 
+  const usesSetVariable = block.options.content.includes("setVariable(");
+
   return {
     outgoingEdgeId: block.outgoingEdgeId,
     clientSideActions: [
@@ -70,6 +71,7 @@ export const executeScript = async (
           ...scriptToExecute,
           isUnsafe: block.options.isUnsafe,
         },
+        ...(usesSetVariable ? { expectsDedicatedReply: true } : {}),
       },
     ],
   };
@@ -85,12 +87,11 @@ export const parseScriptToExecuteClientSideAction = (
     sessionStore,
     fieldToParse: "id",
   });
-  const args = extractVariablesFromText(variables)(contentToEvaluate).map(
-    (variable) => ({
-      id: variable.id,
-      value: parseGuessedValueType(variable.value),
-    }),
-  );
+  const args = variables.map((variable) => ({
+    id: variable.id,
+    name: variable.name,
+    value: parseGuessedValueType(variable.value),
+  }));
   return {
     content,
     args,

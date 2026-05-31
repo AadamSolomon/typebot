@@ -11,10 +11,12 @@ export const continueChatQuery = async ({
   apiHost,
   message,
   sessionId,
+  variableUpdates,
 }: {
   apiHost?: string;
   message?: Message;
   sessionId: string;
+  variableUpdates?: { name: string; value: unknown }[];
 }) => {
   try {
     const iframeReferrerOrigin = getIframeReferrerOrigin();
@@ -29,6 +31,7 @@ export const continueChatQuery = async ({
           },
           json: {
             message,
+            ...(variableUpdates?.length ? { variableUpdates } : {}),
           },
           timeout: false,
         },

@@ -5,25 +5,16 @@ import { useEditor } from "@/features/editor/providers/EditorProvider";
 import { useTypebot } from "@/features/editor/providers/TypebotProvider";
 import { useGraph } from "@/features/graph/providers/GraphProvider";
 import { useUser } from "@/features/user/hooks/useUser";
-import { toast } from "@/lib/toast";
 
-export const WebPreview = () => {
+type Props = {
+  onNewLogs: (logs: ContinueChatResponse["logs"]) => void;
+};
+
+export const WebPreview = ({ onNewLogs }: Props) => {
   const { user } = useUser();
   const { typebot } = useTypebot();
   const { startPreviewFrom } = useEditor();
   const { setPreviewingBlock } = useGraph();
-
-  const handleNewLogs = (logs: ContinueChatResponse["logs"]) => {
-    logs?.forEach((log) => {
-      toast({
-        title: log.context,
-        type: log.status as "success" | "error" | "info",
-        description: log.description,
-        details: log.details,
-      });
-      if (log.status === "error") console.error(log);
-    });
-  };
 
   if (!typebot) return null;
 
@@ -48,8 +39,9 @@ export const WebPreview = () => {
               ?.id ?? "",
         })
       }
-      onNewLogs={handleNewLogs}
+      onNewLogs={onNewLogs}
       style={{
+        flex: 1,
         borderWidth: "1px",
         borderRadius: "0.25rem",
         backgroundColor:

@@ -25,12 +25,15 @@ export const WhatsAppPreviewInstructions = ({
   const [isSendingMessage, setIsSendingMessage] = useState(false);
   const [isMessageSent, setIsMessageSent] = useState(false);
   const [hasMessageBeenSent, setHasMessageBeenSent] = useState(false);
+  const [requiresManualStart, setRequiresManualStart] = useState(false);
 
   const { mutate } = useMutation(
     orpc.whatsApp.startWhatsAppPreview.mutationOptions({
       onMutate: () => setIsSendingMessage(true),
       onSettled: () => setIsSendingMessage(false),
-      onSuccess: async () => {
+      onSuccess: async (data) => {
+        const needsManual = data.message.includes("Send any message");
+        setRequiresManualStart(needsManual);
         setHasMessageBeenSent(true);
         setIsMessageSent(true);
         setTimeout(() => setIsMessageSent(false), 30000);
@@ -82,14 +85,12 @@ export const WhatsAppPreviewInstructions = ({
           onValueChange={setPhoneNumber}
         />
       </Field.Root>
-      {!isMessageSent && (
-        <Button
-          disabled={isEmpty(phoneNumber) || isMessageSent || isSendingMessage}
-          type="submit"
-        >
-          {hasMessageBeenSent ? "Restart" : "Start"} the chat
-        </Button>
-      )}
+      <Button
+        disabled={isEmpty(phoneNumber) || isSendingMessage}
+        type="submit"
+      >
+        {hasMessageBeenSent ? "Restart" : "Start"} the chat
+      </Button>
       {isMessageSent && (
         <div className="flex flex-col gap-2 animate-in fade-in-0 slide-in-from-bottom-2">
           <ButtonLink href={"https://web.whatsapp.com/"} target="_blank">
@@ -98,9 +99,13 @@ export const WhatsAppPreviewInstructions = ({
           </ButtonLink>
           <Alert.Root variant="success">
             <CheckmarkSquare02Icon />
-            <Alert.Title>Chat started!</Alert.Title>
+            <Alert.Title>
+              {requiresManualStart ? "Session ready!" : "Chat started!"}
+            </Alert.Title>
             <Alert.Description>
-              The first message can take up to 2 min to be delivered.
+              {requiresManualStart
+                ? "Send any message to your bot's WhatsApp number to begin the conversation."
+                : "The first message can take up to 2 min to be delivered."}
             </Alert.Description>
           </Alert.Root>
         </div>

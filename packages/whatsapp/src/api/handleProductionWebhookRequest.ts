@@ -4,11 +4,13 @@ import { decrypt } from "@typebot.io/credentials/decrypt";
 import { getCredentials } from "@typebot.io/credentials/getCredentials";
 import { whatsAppCredentialsDataSchema } from "@typebot.io/credentials/schemas";
 import { parseUnknownError } from "@typebot.io/lib/parseUnknownError";
+import prisma from "@typebot.io/prisma";
 import { after } from "next/server";
 import { z } from "zod";
 import {
   dialog360WebhookSecretHeaderName,
   WEBHOOK_SUCCESS_MESSAGE,
+  WHATSAPP_PREVIEW_SESSION_ID_PREFIX,
   WHATSAPP_SESSION_ID_PREFIX,
 } from "../constants";
 import { extractErrorsFromEntry } from "../extractErrorsFromEntry";
@@ -97,21 +99,38 @@ export const handleProductionWebhookRequest = async ({
         ] of incomingMessagesDetails.entries()) {
           for (const [from, parsedEntries] of fromMap.entries()) {
             try {
-              await resumeWhatsAppFlow({
-                receivedMessages: parsedEntries.map(
-                  (parsedEntry) => parsedEntry.receivedMessages,
-                ),
-                sessionId: `${WHATSAPP_SESSION_ID_PREFIX}${phoneNumberId}-${from}`,
-                phoneNumberId,
-                credentialsId,
-                credentialsData,
-                workspaceId,
-                contact: {
-                  name: parsedEntries[0].contactName,
-                  phoneNumber: parsedEntries[0].contactPhoneNumber,
-                },
-                referral: parsedEntries[0].referral,
+              const previewSessionId = `${WHATSAPP_PREVIEW_SESSION_ID_PREFIX}${phoneNumberId}-${from}`;
+              const previewSession = await prisma.chatSession.findUnique({
+                where: { id: previewSessionId },
+                select: { id: true },
               });
+              const contact = {
+                name: parsedEntries[0].contactName,
+                phoneNumber: parsedEntries[0].contactPhoneNumber,
+              };
+              const receivedMessages = parsedEntries.map(
+                (parsedEntry) => parsedEntry.receivedMessages,
+              );
+              if (previewSession) {
+                await resumeWhatsAppFlow({
+                  receivedMessages,
+                  sessionId: previewSessionId,
+                  credentialsData,
+                  contact,
+                  referral: parsedEntries[0].referral,
+                });
+              } else {
+                await resumeWhatsAppFlow({
+                  receivedMessages,
+                  sessionId: `${WHATSAPP_SESSION_ID_PREFIX}${phoneNumberId}-${from}`,
+                  phoneNumberId,
+                  credentialsId,
+                  credentialsData,
+                  workspaceId,
+                  contact,
+                  referral: parsedEntries[0].referral,
+                });
+              }
             } catch (err) {
               if (err instanceof WhatsAppError) {
                 console.log("Known WA error", err.message, err.details);

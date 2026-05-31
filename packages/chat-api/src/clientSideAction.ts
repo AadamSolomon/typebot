@@ -21,6 +21,7 @@ const scriptToExecuteSchema = z.object({
   args: z.array(
     z.object({
       id: z.string(),
+      name: z.string().optional(),
       value: z
         .string()
         .or(z.number())

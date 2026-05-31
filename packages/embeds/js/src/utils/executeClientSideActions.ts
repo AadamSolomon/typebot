@@ -19,8 +19,11 @@ import { injectStartProps } from "./injectStartProps";
 type ClientSideActionResponse =
   | { blockedPopupUrl: string }
   | { replyToSend: string | undefined; logs?: LogInSession[] }
-  | { logs: LogInSession[] }
-  | { scriptCallbackMessage: string }
+  | {
+      scriptCallbackMessage?: string;
+      variableUpdates?: { name: string; value: unknown }[];
+      logs?: LogInSession[];
+    }
   | undefined;
 
 type Props = {
