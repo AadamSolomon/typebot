@@ -2,6 +2,7 @@ import { EventType } from "@typebot.io/events/constants";
 import type { TEvent } from "@typebot.io/events/schemas";
 import type { JSX } from "react";
 import { StartEventNode } from "@/features/events/components/StartEventNode";
+import { BotMessageEventNode } from "./BotMessageEventNode";
 import { CommandEventNode } from "./CommandEventNode";
 import { InvalidReplyEventNode } from "./InvalidReplyEventNode";
 import { ReplyEventNode } from "./ReplyEventNode";
@@ -20,5 +21,7 @@ export const EventNodeContent = ({ event }: Props): JSX.Element => {
       return <ReplyEventNode options={event.options} />;
     case EventType.INVALID_REPLY:
       return <InvalidReplyEventNode options={event.options} />;
+    case EventType.BOT_MESSAGE:
+      return <BotMessageEventNode />;
   }
 };

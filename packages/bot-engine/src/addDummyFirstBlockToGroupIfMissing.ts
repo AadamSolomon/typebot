@@ -32,7 +32,6 @@ export const addDummyFirstBlockToGroupIfMissing = (
                         {
                           id,
                           type: BubbleBlockType.TEXT,
-                          content: {},
                         },
                         ...group.blocks.slice(index),
                       ],

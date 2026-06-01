@@ -45,10 +45,16 @@ export const invalidReplyEventSchema = eventBaseSchema.extend({
 });
 export type InvalidReplyEvent = z.infer<typeof invalidReplyEventSchema>;
 
+export const botMessageEventSchema = eventBaseSchema.extend({
+  type: z.literal(EventType.BOT_MESSAGE),
+});
+export type BotMessageEvent = z.infer<typeof botMessageEventSchema>;
+
 const draggableEventSchemas = [
   commandEventSchema,
   replyEventSchema,
   invalidReplyEventSchema,
+  botMessageEventSchema,
 ] as const;
 
 export const eventSchema = z.discriminatedUnion("type", [

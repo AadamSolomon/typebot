@@ -3,4 +3,5 @@ export enum EventType {
   COMMAND = "command",
   REPLY = "reply",
   INVALID_REPLY = "invalidReply",
+  BOT_MESSAGE = "botMessage",
 }

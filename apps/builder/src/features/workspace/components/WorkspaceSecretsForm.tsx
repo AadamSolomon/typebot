@@ -146,9 +146,9 @@ export const WorkspaceSecretsForm = () => {
 };
 
 const SecretRow = ({
-  id,
+  id: _id,
   name,
-  workspaceId,
+  workspaceId: _workspaceId,
   onEditClick,
   onDeleteConfirm,
 }: {

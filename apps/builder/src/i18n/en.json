@@ -617,5 +617,8 @@
   "workspace.settings.modal.menu.settings.label": "Settings",
   "workspace.settings.modal.menu.version.label": "Version: {version}",
   "workspace.settings.modal.menu.workspace.label": "Workspace",
-  "workspace.settings.name.label": "Name:"
+  "workspace.settings.name.label": "Name:",
+  "blocks.events.botMessage.eventCard.tooltip": "Triggered before each bot bubble is sent.",
+  "blocks.events.botMessage.node.label": "Before bubble",
+  "editor.sidebarBlock.botMessage.label": "Before bubble"
 }

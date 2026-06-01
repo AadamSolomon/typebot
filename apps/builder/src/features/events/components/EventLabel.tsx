@@ -20,4 +20,5 @@ export const getEventBlockLabel = (
   [EventType.COMMAND]: t("editor.sidebarBlock.command.label"),
   [EventType.REPLY]: t("editor.sidebarBlock.reply.label"),
   [EventType.INVALID_REPLY]: t("editor.sidebarBlock.invalidReply.label"),
+  [EventType.BOT_MESSAGE]: t("editor.sidebarBlock.botMessage.label"),
 });

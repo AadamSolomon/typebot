@@ -1,7 +1,7 @@
 import type { LogInSession } from "@typebot.io/logs/schemas";
 import { Button } from "@typebot.io/ui/components/Button";
-import { cn } from "@typebot.io/ui/lib/cn";
 import { TrashIcon } from "@typebot.io/ui/icons/TrashIcon";
+import { cn } from "@typebot.io/ui/lib/cn";
 import { useDrag } from "@use-gesture/react";
 import { useEffect, useRef, useState } from "react";
 
@@ -18,7 +18,9 @@ export const ConsolePanel = ({ logs, onClear }: Props) => {
 
   const bind = useDrag(
     (state) => {
-      setHeight(Math.max(80, Math.min(window.innerHeight * 0.7, -state.offset[1])));
+      setHeight(
+        Math.max(80, Math.min(window.innerHeight * 0.7, -state.offset[1])),
+      );
     },
     { from: () => [0, -height] },
   );
@@ -54,8 +56,11 @@ export const ConsolePanel = ({ logs, onClear }: Props) => {
           <p className="text-gray-10 text-xs text-center m-auto">No logs yet</p>
         ) : (
           <>
-            {logs.map((log, i) => (
-              <LogEntryItem key={i} log={log} />
+            {logs.map((log) => (
+              <LogEntryItem
+                key={`${log.receivedAt.getTime()}-${log.description}`}
+                log={log}
+              />
             ))}
             <div ref={bottomRef} />
           </>
@@ -86,14 +91,8 @@ const LogEntryItem = ({ log }: { log: ConsoleLogEntry }) => {
     }
   })();
 
-  return (
-    <div
-      className={cn(
-        "flex flex-col gap-0.5 rounded px-2 py-1 text-xs",
-        formattedDetails && "cursor-pointer hover:bg-gray-3",
-      )}
-      onClick={formattedDetails ? () => setIsExpanded((v) => !v) : undefined}
-    >
+  const body = (
+    <>
       <div className="flex gap-2">
         <span
           className={cn(
@@ -115,6 +114,24 @@ const LogEntryItem = ({ log }: { log: ConsoleLogEntry }) => {
           {formattedDetails}
         </pre>
       )}
+    </>
+  );
+
+  if (formattedDetails) {
+    return (
+      <button
+        type="button"
+        className="flex flex-col gap-0.5 rounded px-2 py-1 text-xs text-left w-full cursor-pointer hover:bg-gray-3"
+        onClick={() => setIsExpanded((v) => !v)}
+      >
+        {body}
+      </button>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-0.5 rounded px-2 py-1 text-xs">
+      {body}
     </div>
   );
 };

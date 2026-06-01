@@ -61,5 +61,15 @@ export const EventCard = (
           <EventLabel type={props.type} />
         </EventCardLayout>
       );
+    case EventType.BOT_MESSAGE:
+      return (
+        <EventCardLayout
+          {...props}
+          tooltip={t("blocks.events.botMessage.eventCard.tooltip")}
+        >
+          <EventIcon type={props.type} />
+          <EventLabel type={props.type} />
+        </EventCardLayout>
+      );
   }
 };

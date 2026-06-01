@@ -18,6 +18,9 @@ import type {
   SetVariableHistoryItem,
   VariableWithValue,
 } from "@typebot.io/variables/schemas";
+import { EventType } from "@typebot.io/events/constants";
+import type { BotMessageEvent } from "@typebot.io/events/schemas";
+import { executeBotMessageEvent } from "./events/executeBotMessageEvent";
 import { executeIntegration } from "./executeIntegration";
 import { executeLogic } from "./executeLogic";
 import { formatInputForChatResponse } from "./formatInputForChatResponse";
@@ -212,6 +215,22 @@ const executeGroup = async (
 
     if (isBubbleBlock(block)) {
       if (!block.content || (skipFirstMessageBubble && index === 0)) continue;
+      const botMessageEvent = findBotMessageEvent(newSessionState);
+      if (botMessageEvent) {
+        newSessionState = executeBotMessageEvent(botMessageEvent, {
+          state: newSessionState,
+          bubbleBlockId: block.id,
+        });
+        return {
+          messages,
+          newSessionState,
+          clientSideActions,
+          logs,
+          newSetVariableHistoryItems,
+          nextEdge: { id: botMessageEvent.outgoingEdgeId, isOffDefaultPath: true },
+          lastBubbleBlockId,
+        };
+      }
       const message = parseBubbleBlock(block as BubbleBlockWithDefinedContent, {
         version,
         variables: newSessionState.typebotsQueue[0].typebot.variables,
@@ -529,6 +548,15 @@ const navigateToNextGroupAndUpdateState = async ({
           }
         : undefined,
   };
+};
+
+const findBotMessageEvent = (
+  state: SessionState,
+): (BotMessageEvent & { outgoingEdgeId: string }) | undefined => {
+  if (state.currentBlockId?.startsWith("virtual-")) return undefined;
+  return state.typebotsQueue[0].typebot.events?.find(
+    (e) => e.type === EventType.BOT_MESSAGE && e.outgoingEdgeId,
+  ) as (BotMessageEvent & { outgoingEdgeId: string }) | undefined;
 };
 
 const popQueuedEdge = (

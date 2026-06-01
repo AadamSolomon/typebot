@@ -1,6 +1,7 @@
 import { EventType } from "@typebot.io/events/constants";
 import type { TEvent } from "@typebot.io/events/schemas";
 import { Cancel01Icon } from "@typebot.io/ui/icons/Cancel01Icon";
+import { ChatIcon } from "@typebot.io/ui/icons/ChatIcon";
 import { CommandIcon } from "@typebot.io/ui/icons/CommandIcon";
 import { Flag02Icon } from "@typebot.io/ui/icons/Flag02Icon";
 import { SentIcon } from "@typebot.io/ui/icons/SentIcon";
@@ -29,5 +30,7 @@ export const EventIcon = ({
       return (
         <Cancel01Icon {...props} className={cn(className, "text-gray-12")} />
       );
+    case EventType.BOT_MESSAGE:
+      return <ChatIcon {...props} className={cn(className, "text-gray-12")} />;
   }
 };

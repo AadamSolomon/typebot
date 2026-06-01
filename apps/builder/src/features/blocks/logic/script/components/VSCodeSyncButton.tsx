@@ -1,13 +1,13 @@
+import { useMutation, useQuery } from "@tanstack/react-query";
 import type { BlockWithOptions } from "@typebot.io/blocks-core/schemas/schema";
 import { LogicBlockType } from "@typebot.io/blocks-logic/constants";
 import type { ScriptBlock } from "@typebot.io/blocks-logic/script/schema";
 import { Button } from "@typebot.io/ui/components/Button";
 import { Dialog } from "@typebot.io/ui/components/Dialog";
 import { SourceCodeIcon } from "@typebot.io/ui/icons/SourceCodeIcon";
-import { useMutation, useQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
-import { orpc } from "@/lib/queryClient";
 import { useTypebot } from "@/features/editor/providers/TypebotProvider";
+import { orpc } from "@/lib/queryClient";
 
 export const VSCodeSyncButton = () => {
   const { typebot, updateBlock } = useTypebot();
@@ -128,7 +128,9 @@ export const VSCodeSyncButton = () => {
   const byGroup = scriptBlocks.reduce<Record<string, typeof scriptBlocks>>(
     (acc, entry) => {
       const key = entry.groupTitle;
-      return { ...acc, [key]: [...(acc[key] ?? []), entry] };
+      if (!acc[key]) acc[key] = [];
+      acc[key].push(entry);
+      return acc;
     },
     {},
   );
