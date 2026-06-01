@@ -10,6 +10,8 @@ import {
 import type { ContinueChatResponse } from "@typebot.io/chat-api/schemas";
 import type { SessionState } from "@typebot.io/chat-session/schemas";
 import { env } from "@typebot.io/env";
+import { EventType } from "@typebot.io/events/constants";
+import type { BotMessageEvent } from "@typebot.io/events/schemas";
 import type { Group } from "@typebot.io/groups/schemas";
 import { byId, isDefined, isNotDefined } from "@typebot.io/lib/utils";
 import type { Prisma } from "@typebot.io/prisma/types";
@@ -18,8 +20,6 @@ import type {
   SetVariableHistoryItem,
   VariableWithValue,
 } from "@typebot.io/variables/schemas";
-import { EventType } from "@typebot.io/events/constants";
-import type { BotMessageEvent } from "@typebot.io/events/schemas";
 import { executeBotMessageEvent } from "./events/executeBotMessageEvent";
 import { executeIntegration } from "./executeIntegration";
 import { executeLogic } from "./executeLogic";
@@ -227,7 +227,10 @@ const executeGroup = async (
           clientSideActions,
           logs,
           newSetVariableHistoryItems,
-          nextEdge: { id: botMessageEvent.outgoingEdgeId, isOffDefaultPath: true },
+          nextEdge: {
+            id: botMessageEvent.outgoingEdgeId,
+            isOffDefaultPath: true,
+          },
           lastBubbleBlockId,
         };
       }

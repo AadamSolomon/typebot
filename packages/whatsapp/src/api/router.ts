@@ -23,6 +23,10 @@ import {
   handleGetWhatsAppMediaPreview,
 } from "./handleGetWhatsAppMediaPreview";
 import {
+  getWhatsAppPreviewLogsInputSchema,
+  handleGetWhatsAppPreviewLogs,
+} from "./handleGetWhatsAppPreviewLogs";
+import {
   handlePreviewWebhookRequest,
   previewWebhookRequestInputSchema,
 } from "./handlePreviewWebhookRequest";
@@ -34,10 +38,6 @@ import {
   handleSetupMetaWebhook,
   setupMetaWebhookInputSchema,
 } from "./handleSetupMetaWebhook";
-import {
-  getWhatsAppPreviewLogsInputSchema,
-  handleGetWhatsAppPreviewLogs,
-} from "./handleGetWhatsAppPreviewLogs";
 import {
   handleStartWhatsAppPreview,
   startWhatsAppPreviewInputSchema,

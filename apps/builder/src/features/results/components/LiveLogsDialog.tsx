@@ -53,9 +53,9 @@ export const LiveLogsDialog = ({ typebotId, isOpen, onClose }: Props) => {
 
         {!isLoading && !error && logs.length === 0 && (
           <p className="text-gray-11 text-sm py-4">
-            No logs yet. Interact with the{" "}
-            <strong>published bot</strong> — logs from the Script block,
-            HTTP requests, OpenAI, and other integrations appear here.
+            No logs yet. Interact with the <strong>published bot</strong> — logs
+            from the Script block, HTTP requests, OpenAI, and other integrations
+            appear here.
           </p>
         )}
 
@@ -79,9 +79,7 @@ const LogCard = ({ log }: { log: Log }) => {
           <span className="text-gray-12">{log.resultId}</span>
         </p>
         <p>
-          {log.context && (
-            <span className="font-medium">{log.context}:</span>
-          )}{" "}
+          {log.context && <span className="font-medium">{log.context}:</span>}{" "}
           {log.description}
         </p>
       </div>

@@ -71,8 +71,11 @@ export const executeScript = async (
     const code = unwrapScriptTag(content);
     if (isPreview && isUnsafe) {
       const argsRecord = Object.fromEntries(args.map((a) => [a.id, a.value]));
-      const { value: result, logs: workerLogs, variableUpdates: workerVarUpdates } =
-        await runUserCodeInWorker(code, argsRecord);
+      const {
+        value: result,
+        logs: workerLogs,
+        variableUpdates: workerVarUpdates,
+      } = await runUserCodeInWorker(code, argsRecord);
       collectedLogs.push(...workerLogs);
       variableUpdates.push(...workerVarUpdates);
       if (result && typeof result === "string") {
@@ -87,9 +90,18 @@ export const executeScript = async (
       // with _vars["id"] so they go through the live Proxy.
       const transformedCode = args.reduce((acc, arg) => {
         const escaped = arg.id.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-        return acc.replace(new RegExp(`\\b${escaped}\\b`, "g"), `_vars[${JSON.stringify(arg.id)}]`);
+        return acc.replace(
+          new RegExp(`\\b${escaped}\\b`, "g"),
+          `_vars[${JSON.stringify(arg.id)}]`,
+        );
       }, code);
-      const func = AsyncFunction("_vars", "console", "setVariable", "getVariable", transformedCode);
+      const func = AsyncFunction(
+        "_vars",
+        "console",
+        "setVariable",
+        "getVariable",
+        transformedCode,
+      );
       const result = await func(
         _vars,
         makeConsoleProxy(collectedLogs),

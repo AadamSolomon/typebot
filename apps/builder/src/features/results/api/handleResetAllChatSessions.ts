@@ -52,9 +52,7 @@ export const handleResetAllChatSessions = async ({
     select: { lastChatSessionId: true },
   });
 
-  const sessionIds = results
-    .map((r) => r.lastChatSessionId)
-    .filter(isDefined);
+  const sessionIds = results.map((r) => r.lastChatSessionId).filter(isDefined);
 
   if (sessionIds.length === 0) return { deletedCount: 0 };
 

@@ -138,15 +138,31 @@ type ScriptLog = { status: "info"; description: string; context: "Script" };
 type VariableUpdate = { name: string; value: unknown };
 
 type WorkerResponse =
-  | { id: number; ok: true; result: unknown; logs: ScriptLog[]; variableUpdates: VariableUpdate[] }
-  | { id: number; ok: false; error: string; logs: ScriptLog[]; variableUpdates: VariableUpdate[] };
+  | {
+      id: number;
+      ok: true;
+      result: unknown;
+      logs: ScriptLog[];
+      variableUpdates: VariableUpdate[];
+    }
+  | {
+      id: number;
+      ok: false;
+      error: string;
+      logs: ScriptLog[];
+      variableUpdates: VariableUpdate[];
+    };
 
 let nextId = 0;
 
 export const runUserCodeInWorker = async (
   code: string,
   args: Record<string, unknown>,
-): Promise<{ value: unknown; logs: ScriptLog[]; variableUpdates: VariableUpdate[] }> => {
+): Promise<{
+  value: unknown;
+  logs: ScriptLog[];
+  variableUpdates: VariableUpdate[];
+}> => {
   const worker = await getScriptRunnerWorker();
 
   return new Promise((resolve, reject) => {
@@ -158,7 +174,12 @@ export const runUserCodeInWorker = async (
 
       worker.removeEventListener("message", listener);
 
-      if (msg.ok) resolve({ value: msg.result, logs: msg.logs, variableUpdates: msg.variableUpdates });
+      if (msg.ok)
+        resolve({
+          value: msg.result,
+          logs: msg.logs,
+          variableUpdates: msg.variableUpdates,
+        });
       else reject(new Error(msg.error));
     };
 

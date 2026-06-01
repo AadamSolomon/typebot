@@ -64,7 +64,8 @@ export const handleContinueChat = async ({
   let sessionState = session.state;
 
   if (variableUpdates?.length) {
-    const currentVariables = sessionState.typebotsQueue[0]?.typebot.variables ?? [];
+    const currentVariables =
+      sessionState.typebotsQueue[0]?.typebot.variables ?? [];
     const resolvedUpdates = variableUpdates.flatMap(({ name, value }) => {
       const existing = currentVariables.find((v) => v.name === name);
       if (!existing) return [];

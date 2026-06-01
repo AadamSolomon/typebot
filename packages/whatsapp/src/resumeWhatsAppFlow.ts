@@ -2,12 +2,13 @@ import type { Block } from "@typebot.io/blocks-core/schemas/schema";
 import { InputBlockType } from "@typebot.io/blocks-inputs/constants";
 import { continueBotFlow } from "@typebot.io/bot-engine/continueBotFlow";
 import { saveStateToDatabase } from "@typebot.io/bot-engine/saveStateToDatabase";
-import type { ContinueChatResponse, Message } from "@typebot.io/chat-api/schemas";
+import type {
+  ContinueChatResponse,
+  Message,
+} from "@typebot.io/chat-api/schemas";
 import { getSession } from "@typebot.io/chat-session/queries/getSession";
 import { upsertSession } from "@typebot.io/chat-session/queries/upsertSession";
 import type { SessionState } from "@typebot.io/chat-session/schemas";
-import type { Prisma } from "@typebot.io/prisma/types";
-import type { SetVariableHistoryItem } from "@typebot.io/variables/schemas";
 import { decrypt } from "@typebot.io/credentials/decrypt";
 import { getCredentials } from "@typebot.io/credentials/getCredentials";
 import type { WhatsAppCredentials } from "@typebot.io/credentials/schemas";
@@ -17,10 +18,12 @@ import { extensionFromMimeType } from "@typebot.io/lib/extensionFromMimeType";
 import redis from "@typebot.io/lib/redis";
 import { uploadFileToBucket } from "@typebot.io/lib/s3/uploadFileToBucket";
 import { isDefined } from "@typebot.io/lib/utils";
+import type { Prisma } from "@typebot.io/prisma/types";
 import {
   type SessionStore,
   withSessionStore,
 } from "@typebot.io/runtime-session-store";
+import type { SetVariableHistoryItem } from "@typebot.io/variables/schemas";
 import { downloadMedia } from "./downloadMedia";
 import type {
   WhatsAppIncomingMessage,
@@ -129,7 +132,12 @@ export const resumeWhatsAppFlow = async ({
     session?.isReplying &&
     session.updatedAt.getTime() + STALE_REPLY_LOCK_MS < Date.now();
 
-  if (!isSessionExpired && session?.isReplying && !isReplyLockStale && callFrom !== "webhook")
+  if (
+    !isSessionExpired &&
+    session?.isReplying &&
+    !isReplyLockStale &&
+    callFrom !== "webhook"
+  )
     throw new WhatsAppError("Is in reply state");
   if (aggregationResponse.status === "treat as unique message") {
     await upsertSession(sessionId, {

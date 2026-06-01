@@ -1,3 +1,4 @@
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { defaultScriptOptions } from "@typebot.io/blocks-logic/script/constants";
 import type { ScriptBlock } from "@typebot.io/blocks-logic/script/schema";
 import { Button } from "@typebot.io/ui/components/Button";
@@ -6,11 +7,10 @@ import { MoreInfoTooltip } from "@typebot.io/ui/components/MoreInfoTooltip";
 import { Select } from "@typebot.io/ui/components/Select";
 import { Switch } from "@typebot.io/ui/components/Switch";
 import { ArrowExpand01Icon } from "@typebot.io/ui/icons/ArrowExpand01Icon";
-import { useMutation, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { orpc } from "@/lib/queryClient";
-import { useTypebot } from "@/features/editor/providers/TypebotProvider";
 import { CodeEditor } from "@/components/inputs/CodeEditor";
+import { useTypebot } from "@/features/editor/providers/TypebotProvider";
+import { orpc } from "@/lib/queryClient";
 import { ScriptEditorDialog } from "./ScriptEditorDialog";
 import { UnsafeScriptAlert } from "./UnsafeScriptAlert";
 

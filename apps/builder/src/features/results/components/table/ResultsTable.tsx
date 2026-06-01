@@ -15,7 +15,7 @@ import type { ResultsTablePreferences } from "@typebot.io/typebot/schemas/typebo
 import { Button } from "@typebot.io/ui/components/Button";
 import { Checkbox } from "@typebot.io/ui/components/Checkbox";
 import { TextAlignLeftIcon } from "@typebot.io/ui/icons/TextAlignLeftIcon";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { TimeFilterSelect } from "@/features/analytics/components/TimeFilterSelect";
 import { useTypebot } from "@/features/editor/providers/TypebotProvider";
 import { HeaderIcon } from "../HeaderIcon";

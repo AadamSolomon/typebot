@@ -21,13 +21,17 @@ import {
 } from "./handleGetResultLogs";
 import { getResultsInputSchema, handleGetResults } from "./handleGetResults";
 import {
+  getResultTranscriptInputSchema,
+  handleGetResultTranscript,
+} from "./handleGetResultTranscript";
+import {
   getTypebotLogsInputSchema,
   handleGetTypebotLogs,
 } from "./handleGetTypebotLogs";
 import {
-  getResultTranscriptInputSchema,
-  handleGetResultTranscript,
-} from "./handleGetResultTranscript";
+  handleResetAllChatSessions,
+  resetAllChatSessionsInputSchema,
+} from "./handleResetAllChatSessions";
 import {
   handleStreamExportJob,
   streamExportJobInputSchema,
@@ -36,10 +40,6 @@ import {
   handleTriggerSendExportResultsToEmail,
   triggerSendExportResultsToEmailInputSchema,
 } from "./handleTriggerSendExportResultsToEmail";
-import {
-  handleResetAllChatSessions,
-  resetAllChatSessionsInputSchema,
-} from "./handleResetAllChatSessions";
 
 export const resultsRouter = {
   getResults: authenticatedProcedure

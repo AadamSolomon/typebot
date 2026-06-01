@@ -13,11 +13,11 @@ import { googleSheetsRouter } from "@/features/blocks/integrations/googleSheets/
 import { httpRequestRouter } from "@/features/blocks/integrations/httpRequest/api/router";
 import { openAIRouter } from "@/features/blocks/integrations/openai/api/router";
 import { emailRouter } from "@/features/blocks/integrations/sendEmail/api/router";
-import { getLinkedTypebots } from "@/features/blocks/logic/typebotLink/api/getLinkedTypebots";
 import {
-  scriptsRouter,
   type ScriptsRouter,
+  scriptsRouter,
 } from "@/features/blocks/logic/script/api/router";
+import { getLinkedTypebots } from "@/features/blocks/logic/typebotLink/api/getLinkedTypebots";
 import { collaboratorsRouter } from "@/features/collaboration/api/router";
 import { credentialsRouter } from "@/features/credentials/api/router";
 import { customDomainsRouter } from "@/features/customDomains/api/router";

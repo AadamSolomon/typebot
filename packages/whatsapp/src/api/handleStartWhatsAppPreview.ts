@@ -98,8 +98,7 @@ export const handleStartWhatsAppPreview = async ({
     );
     if (!parsedData.success || parsedData.data.provider === "360dialog")
       throw new ORPCError("BAD_REQUEST", {
-        message:
-          "WhatsApp preview requires Meta (not 360dialog) credentials",
+        message: "WhatsApp preview requires Meta (not 360dialog) credentials",
       });
     previewCredentials = {
       provider: "meta",

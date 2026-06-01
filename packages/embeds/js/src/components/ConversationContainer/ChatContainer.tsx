@@ -377,7 +377,10 @@ export const ChatContainer = (props: Props) => {
       setChatChunks(popClientSideAction);
       if (response && "logs" in response) saveLogs(response.logs);
       if (response && "variableUpdates" in response && response.variableUpdates)
-        setPendingVariableUpdates((prev) => [...prev, ...response.variableUpdates!]);
+        setPendingVariableUpdates((prev) => [
+          ...prev,
+          ...response.variableUpdates!,
+        ]);
       if (response && "replyToSend" in response) {
         setIsSending(false);
         sendMessage(
@@ -406,7 +409,11 @@ export const ChatContainer = (props: Props) => {
           },
         });
       }
-      if (response && "scriptCallbackMessage" in response && typeof response.scriptCallbackMessage === "string")
+      if (
+        response &&
+        "scriptCallbackMessage" in response &&
+        typeof response.scriptCallbackMessage === "string"
+      )
         props.onScriptExecutionSuccess?.(response.scriptCallbackMessage);
     }
   };

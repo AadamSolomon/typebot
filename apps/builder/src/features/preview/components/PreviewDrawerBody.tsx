@@ -10,7 +10,10 @@ type Props = {
   onNewLogs: (logs: ContinueChatResponse["logs"]) => void;
 };
 
-export const PreviewDrawerBody = ({ runtime, onNewLogs }: Props): JSX.Element => {
+export const PreviewDrawerBody = ({
+  runtime,
+  onNewLogs,
+}: Props): JSX.Element => {
   switch (runtime) {
     case "Web": {
       return <WebPreview onNewLogs={onNewLogs} />;

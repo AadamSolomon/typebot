@@ -45,9 +45,7 @@ export const scriptsRouter = {
 
   listSrcScripts: authenticatedProcedure
     .input(z.object({ typebotId: z.string() }))
-    .output(
-      z.array(z.object({ relPath: z.string(), name: z.string() })),
-    )
+    .output(z.array(z.object({ relPath: z.string(), name: z.string() })))
     .handler(handleListSrcScripts),
 
   getSrcScript: authenticatedProcedure

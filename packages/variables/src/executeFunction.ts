@@ -47,8 +47,11 @@ export const executeFunction = async ({
   );
 
   const variableUpdates = new Map<string, unknown>();
-  const scriptLogs: { status: "info"; description: string; context: "Script" }[] =
-    [];
+  const scriptLogs: {
+    status: "info";
+    description: string;
+    context: "Script";
+  }[] = [];
 
   const setVariable = (key: string, value: any) => {
     variableUpdates.set(key, value);

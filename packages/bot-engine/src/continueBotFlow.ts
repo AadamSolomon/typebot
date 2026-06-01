@@ -311,9 +311,10 @@ export const continueBotFlow = async (
     messages: executionResponse.messages,
     input: executionResponse.input,
     clientSideActions: executionResponse.clientSideActions,
-    logs: nonInputLogs.length > 0
-      ? nonInputLogs.concat(executionResponse.logs)
-      : executionResponse.logs,
+    logs:
+      nonInputLogs.length > 0
+        ? nonInputLogs.concat(executionResponse.logs)
+        : executionResponse.logs,
     newSessionState: executionResponse.newSessionState,
     visitedEdges: executionResponse.visitedEdges,
     setVariableHistory: executionResponse.setVariableHistory,

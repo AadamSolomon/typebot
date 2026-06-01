@@ -1,11 +1,11 @@
-import { ORPCError } from "@orpc/server";
-import prisma from "@typebot.io/prisma";
-import { isReadTypebotForbidden } from "@typebot.io/typebot/helpers/isReadTypebotForbidden";
-import type { User } from "@typebot.io/user/schemas";
 import { spawn } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { ORPCError } from "@orpc/server";
+import prisma from "@typebot.io/prisma";
+import { isReadTypebotForbidden } from "@typebot.io/typebot/helpers/isReadTypebotForbidden";
+import type { User } from "@typebot.io/user/schemas";
 import { z } from "zod";
 
 export const scriptFileSchema = z.object({
@@ -298,10 +298,9 @@ export const handleLinkFile = async ({
   const idToAbsPath = scanDir(srcDir);
   const previousAbsPath = idToAbsPath.get(blockId);
   if (previousAbsPath && fs.existsSync(previousAbsPath)) {
-    const cleaned = fs.readFileSync(previousAbsPath, "utf-8").replace(
-      new RegExp(`^// @typebot-id: ${blockId}\n`, "m"),
-      "",
-    );
+    const cleaned = fs
+      .readFileSync(previousAbsPath, "utf-8")
+      .replace(new RegExp(`^// @typebot-id: ${blockId}\n`, "m"), "");
     fs.writeFileSync(previousAbsPath, cleaned, "utf-8");
   }
 
@@ -360,8 +359,7 @@ export const handleGetSrcScript = async ({
   await assertAccess(typebotId, user);
   const srcDir = getSrcDir(typebotId);
   const absPath = path.resolve(path.join(srcDir, relPath));
-  if (!absPath.startsWith(srcDir + path.sep))
-    throw new ORPCError("FORBIDDEN");
+  if (!absPath.startsWith(srcDir + path.sep)) throw new ORPCError("FORBIDDEN");
   if (!fs.existsSync(absPath)) throw new ORPCError("NOT_FOUND");
 
   const raw = fs.readFileSync(absPath, "utf-8");

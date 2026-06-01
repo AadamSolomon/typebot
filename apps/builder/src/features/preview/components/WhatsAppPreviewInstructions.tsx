@@ -105,10 +105,7 @@ export const WhatsAppPreviewInstructions = ({
           onValueChange={setPhoneNumber}
         />
       </Field.Root>
-      <Button
-        disabled={isEmpty(phoneNumber) || isSendingMessage}
-        type="submit"
-      >
+      <Button disabled={isEmpty(phoneNumber) || isSendingMessage} type="submit">
         {hasMessageBeenSent ? "Restart" : "Start"} the chat
       </Button>
       {isMessageSent && (

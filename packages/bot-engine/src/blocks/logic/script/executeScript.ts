@@ -26,7 +26,11 @@ export const executeScript = async (
     block.options.isExecutedOnClient ?? defaultScriptOptions.isExecutedOnClient;
 
   if (!isExecutedOnClient) {
-    const { newVariables, error, logs: functionLogs } = await executeFunction({
+    const {
+      newVariables,
+      error,
+      logs: functionLogs,
+    } = await executeFunction({
       variables,
       body: block.options.content,
       sessionStore,
